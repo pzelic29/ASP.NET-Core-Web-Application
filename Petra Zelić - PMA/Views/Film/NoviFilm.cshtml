@@ -1,0 +1,328 @@
+﻿@{
+    ViewData["Title"] = "NoviFilm";
+}
+
+<div class="testbox">
+    <form >
+        <div class="banner">
+            <h1>Novi Film</h1>
+        </div>
+        <div class="item">
+            <p>Naziv filma</p>
+            <div class="name-item">
+                <input type="text" id="naziv" class="form-control" placeholder="Naziv" required>
+                <span id="naziv_g" style="color:red;"></span>
+            </div>
+        </div>
+        <div class="item">
+            <p>Godina</p>
+            <input type="number" id="godina" class="form-control" placeholder="Godina" required>
+            <span id="godina_g" style="color:red;"></span>
+        </div>
+        <div class="item">
+            <p>Cijena< (kn)/p>
+            <input type="number" step=".01" id="cijena" class="form-control" placeholder="Cijena" required>
+            <span id="cijena_g" style="color:red;"></span>
+        </div>
+        <div class="item">
+            <p>URL slike</p>
+            <textarea id="slika" class="form-control" rows="3" placeholder="URL slike..."></textarea>
+        </div>
+        <div class="item">
+            <p>Žanr</p>
+            <select id="zanr">
+            </select>
+            <span id="zanr_g" style="color:red;"></span><br />
+        </div>
+        <div class="item">
+            <p>Redatelj</p>
+            <select id="redatelj" class="selectpicker">
+            </select>
+            <span id="redatelj_g" style="color:red;"></span><br />
+        </div>
+        <div class="btn-block">
+            <button id="saveBtn" class="btn btn-lg btn-danger btn-block btn-login text-uppercase mb-2" value="Spremi" onclick="save()">Spremi</button>
+        </div>
+    </form>
+</div>
+
+
+<!--
+<form>
+    <div class="form-group">
+        <input type="text" id="naziv" class="form-control" placeholder="Naziv">
+        <span id="naziv_g" style="color:red;"></span>
+    </div>
+    <div class="form-group">
+        <input type="number" id="godina" class="form-control" placeholder="Godina">
+        <span id="godina_g" style="color:red;"></span>
+    </div>
+    <div class="form-group">
+        <input type="number" step=".01" id="cijena" class="form-control" placeholder="Cijena">
+        <span id="cijena_g" style="color:red;"></span>
+    </div>
+    <div class="form-group">
+        <textarea id="slika" class="form-control" rows="4" cols="50" placeholder="URL slike..."></textarea>
+    </div>
+
+    <div class="form-group">
+        <select id="zanr">
+        </select>
+        <span id="zanr_g" style="color:red;"></span><br />
+    </div>
+    <div class="form-group">
+        <select id="redatelj" class="selectpicker">
+        </select>
+        <span id="redatelj_g" style="color:red;"></span><br />
+    </div>
+    </form>
+-->
+
+<script type="text/javascript">
+    'use strict';
+
+    window.onload = function () {
+        axios.get('/api/redatelj').then(response => addToSelectRedatelj(response.data));
+        axios.get('/api/zanr').then(response => addToSelectZanr(response.data));
+    }
+
+    function addToSelectRedatelj(podaci) {
+
+        var select = document.getElementById("redatelj");
+        for (var i = 0; i < podaci.length; i++) {
+            var option = document.createElement("option");
+            option.text = podaci[i].ime + " " + podaci[i].prezime;
+            option.value = podaci[i].id;
+            select.appendChild(option);
+        }
+
+    }
+
+    function addToSelectZanr(podaci) {
+
+        var select = document.getElementById("zanr");
+        for (var i = 0; i < podaci.length; i++) {
+            var option = document.createElement("option");
+            option.text = podaci[i].naziv;
+            option.value = podaci[i].id;
+            select.appendChild(option);
+        }
+
+    }
+
+    function save() {
+
+        if (check()) {
+            insert();
+        }
+        else {
+            alert("Podaci nisu ispravni\nMolimo ispravite podatke i pokušajte ponovno");
+        }
+    }
+
+    function check() {
+
+        var ok = true;
+        var naziv = document.getElementById("naziv").value;
+        var godina = document.getElementById("godina").value;
+        var cijena = document.getElementById("cijena").value;
+
+        //naslov
+        if (naziv.length < 1) {
+            ok = false;
+            document.getElementById("naziv_g").innerHTML = "Naziv mora biti upisan i dulji od 1 znaka";
+        }
+        else {
+            document.getElementById("naziv_g").innerHTML = "";
+        }
+
+        //godina
+        var date = new Date();
+        var year = date.getFullYear();
+        if (godina == "") {
+            ok = false;
+            document.getElementById("godina_g").innerHTML = "Godina mora unešena";
+        }
+        else if (godina < 1700 || godina > year) {
+            ok = false;
+            document.getElementById("godina_g").innerHTML = "Godina mora biti 1700-" + year;
+        }
+        else {
+            document.getElementById("godina_g").innerHTML = "";
+        }
+
+        //cijena
+        if (cijena < 0 || cijena == "") {
+            ok = false;
+            document.getElementById("cijena_g").innerHTML = "Cijena mora biti upisana i >=0";
+        }
+        else {
+            document.getElementById("cijena_g").innerHTML = "";
+        }
+
+
+        //redatelj
+        var redateljId = document.getElementById("redatelj").value;
+        if (redateljId <= 0) {
+            ok = false;
+            document.getElementById("redatelj_g").innerHTML = "Mora se odabrati nešto od ponuđenog";
+        }
+        else if (redateljId == "") {
+            ok = false;
+            document.getElementById("redatelj_g").innerHTML = "Mora se odabrati nešto od ponuđenog";
+        }
+        else if (document.getElementById("redatelj").value == null) {
+            ok = false;
+            document.getElementById("redatelj_g").innerHTML = "Mora se odabrati nešto od ponuđenog";
+        }
+        else {
+            document.getElementById("redatelj_g").innerHTML = "";
+        }
+
+
+        //zanr
+        var zanrId = document.getElementById("zanr").value;
+        if (zanrId <= 0) {
+            ok = false;
+            document.getElementById("zanr").innerHTML = "Mora se odabrati nešto od ponuđenog";
+        }
+        else if (zanrId == "") {
+            ok = false;
+            document.getElementById("zanr").innerHTML = "Mora se odabrati nešto od ponuđenog";
+        }
+        else if (document.getElementById("zanr").value == null) {
+            ok = false;
+            document.getElementById("zanr_g").innerHTML = "Mora se odabrati nešto od ponuđenog";
+        }
+        else {
+            document.getElementById("zanr_g").innerHTML = "";
+        }
+
+        return ok;
+    }
+
+    function insert() {
+
+        var naziv = document.getElementById("naziv").value;
+        var godina = document.getElementById("godina").value;
+        var cijena = document.getElementById("cijena").value;
+        var slika = document.getElementById("slika").value;
+        var zanrId = document.getElementById("zanr").value;
+        var redateljId = document.getElementById("redatelj").value;
+
+        var json = {
+            "id": 0,
+            "naziv": naziv,
+            "godina": godina,
+            "slika": slika,
+            "cijena": cijena,
+            "zanrId": zanrId,
+            "redateljId": redateljId
+        }
+
+        axios.post('/api/film/save', json).then(response => alert("Podaci su uspješno dodani"));
+        window.setTimeout(function () {
+            window.location.href = "/Film/Film";
+        }, 3000);  //podaci se ne spreme uspjesno ako se ne saceka
+    }
+
+</script>
+
+<style>
+    html, body {
+        min-height: 100%;
+    }
+
+    body, div, form, input, select, textarea, p {
+        padding: 0;
+        margin: 0;
+        outline: none;
+        font-size: 14px;
+        color: #666;
+        line-height: 22px;
+    }
+
+    h1 {
+        position: absolute;
+        margin: 0;
+        line-height: 42px;
+        font-size: 42px;
+        color: #fff;
+        z-index: 2;
+    }
+
+    .testbox {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: inherit;
+        padding: 20px;
+    }
+
+    form {
+        width: 100%;
+        padding: 20px;
+        border-radius: 6px;
+        background: #fff;
+        box-shadow: 0 0 25px 0 #f5f7fa;
+    }
+
+    .banner {
+        position: relative;
+        height: 300px;
+        background-image: url("https://hips.hearstapps.com/hmg-prod.s3.amazonaws.com/images/best-movies-1614634680.jpg");
+        background-size: cover;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+
+        .banner::after {
+            content: "";
+            background-color: rgba(0, 0, 0, 0.3);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+    input, select, textarea {
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+    }
+
+    input {
+        width: calc(100% - 10px);
+        padding: 5px;
+    }
+
+    select {
+        width: 100%;
+        padding: 7px 0;
+        background: transparent;
+    }
+
+    textarea {
+        width: calc(100% - 12px);
+        padding: 5px;
+    }
+
+    .item input:hover, .item select:hover, .item textarea:hover {
+        border: 1px solid transparent;
+        box-shadow: 0 0 6px 0 #d6e0f5;
+        color: #d11349;
+    }
+
+    .item {
+        position: relative;
+        margin: 10px 0;
+    }
+
+        .item i {
+            right: 2%;
+            top: 28px;
+            z-index: 1;
+        }
+
+</style>

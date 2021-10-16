@@ -1,0 +1,191 @@
+﻿
+@{
+    ViewData["Title"] = "Zanr";
+}
+
+<div class="testbox">
+    <form >
+        <div class="banner">
+            <h1>Žanr</h1>
+        </div>
+        <div class="item">
+            <p>Naziv žanra</p>
+            <div class="name-item">
+                <input type="text" id="naziv" class="form-control" placeholder="Žanr" required autofocus />
+                <span id="naziv_g" style="color:red;"></span><br />
+            </div>
+        </div>
+        <div class="btn-block">
+            <button id="saveBtn" class="btn btn-lg btn-danger btn-block btn-login text-uppercase mb-2" value="Spremi" onclick="save()">Spremi</button>
+        </div>
+    </form>
+</div>
+
+<!--
+<h1>Zanr</h1>
+<form>
+    <div class="form-group">
+        <input type="text" id="naziv" class="form-control" placeholder="Žanr" required autofocus />
+        <span id="naziv_g" style="color:red;"></span><br />
+    </div>
+    <button type="button" class="btn btn-block" id="saveBtn" onclick="save()">Spremi</button>
+</form>
+-->
+
+<script type="text/javascript">
+    'use strict';
+
+    function save() {
+        if (check()) {
+            toDb();
+        }
+        else {
+            alert("Podaci nisu ispravni\nMolimo ispravite podatke i pokušajte ponovno");
+        }
+    }
+
+    function check() {
+        var ok = true;
+
+        var naziv = document.getElementById("naziv").value;
+
+        //naziv zanra
+        if (naziv.length < 2) {
+            ok = false;
+            document.getElementById("naziv_g").innerHTML = "Naziv žanra mora biti upisan i dulji od 1 znaka";
+        }
+        else if (!countLetter(naziv)) {  //ako pronade nesto sto nije slovo,space ili '-'
+            ok = false;
+            document.getElementById("naziv_g").innerHTML = "Naziv smije sadržavati samo slova te po potrebi znak '-' ili razmak";
+        }
+        else { //greska je ispravljena ili je nema
+            document.getElementById("naziv_g").innerHTML = "";
+        }
+
+        return ok;
+    }
+
+    function toDb() {
+
+        var naziv = document.getElementById("naziv").value;
+
+        var json = {
+            "id": 0,
+            "naziv": naziv,
+        }
+        axios.post('/api/zanr/save', json).then(response => alert("Podaci su uspješno spremljeni"));
+        window.setTimeout(function () {
+            document.getElementById("naziv").value = "";
+        }, 1000);
+    }
+
+    function countLetter(tekst) {
+        tekst = tekst.toLowerCase();
+        var abc = "abcdefghijklmnopqrstuvwxyzšđčćž- ";
+        for (var i = 0; i < tekst.length; i++) {
+            if (!abc.includes(tekst[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+</script>
+
+<style>
+    html, body {
+        min-height: 100%;
+    }
+
+    body, div, form, input, select, textarea, p {
+        padding: 0;
+        margin: 0;
+        outline: none;
+        font-size: 14px;
+        color: #666;
+        line-height: 22px;
+    }
+
+    h1 {
+        position: absolute;
+        margin: 0;
+        line-height: 42px;
+        font-size: 42px;
+        color: #fff;
+        z-index: 2;
+    }
+
+    .testbox {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: inherit;
+        padding: 20px;
+    }
+
+    form {
+        width: 100%;
+        padding: 20px;
+        border-radius: 6px;
+        background: #fff;
+        box-shadow: 0 0 25px 0 #f5f7fa;
+    }
+
+    .banner {
+        position: relative;
+        height: 300px;
+        background-image: url("https://images.unsplash.com/photo-1485846234645-a62644f84728?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8Z2VucmUlMjBtb3ZpZXxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60");
+        background-size: cover;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+
+        .banner::after {
+            content: "";
+            background-color: rgba(0, 0, 0, 0.3);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+    input, select, textarea {
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+    }
+
+    input {
+        width: calc(100% - 10px);
+        padding: 5px;
+    }
+
+    select {
+        width: 100%;
+        padding: 7px 0;
+        background: transparent;
+    }
+
+    textarea {
+        width: calc(100% - 12px);
+        padding: 5px;
+    }
+
+    .item input:hover, .item select:hover, .item textarea:hover {
+        border: 1px solid transparent;
+        box-shadow: 0 0 6px 0 #d6e0f5;
+        color: #d11349;
+    }
+
+    .item {
+        position: relative;
+        margin: 10px 0;
+    }
+
+        .item i {
+            right: 2%;
+            top: 28px;
+            z-index: 1;
+        }
+</style>

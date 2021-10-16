@@ -1,0 +1,213 @@
+﻿@using Microsoft.AspNetCore.Identity;
+@{
+    ViewData["Title"] = "Film";
+}
+
+<div class="w3-display-middle" style="width:65%">
+    <div class="w3-container w3-white w3-padding-16 myLink">
+        <div class="input-group mb-3 .center-block">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon1">Filter</span>
+            </div>
+            <input type="text" id="filter" onkeyup="filtriraj()" class="form-control" placeholder="Pretraži po naslovu.." aria-label="Pretraži po naslovu.." aria-describedby="basic-addon1">
+        </div>
+
+        <div class="input-group mb-3 .center-block">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon1">Sortiraj prema</span>
+            </div>
+            <select id="opcija" onchange="sortiraj()" class="selectpicker" data-style="btn-primary" title="Izaberi...">
+                <optgroup label="Godina">
+                    <option value="1">Godina uzlazno</option>
+                    <option value="2">Godina silazno</option>
+                </optgroup>
+                <optgroup label="Cijena">
+                    <option value="3">Cijena uzlazno</option>
+                    <option value="3">Cijena silazno</option>
+                </optgroup>
+            </select>
+        </div>
+
+    </div>
+</div>
+
+<table class="table table-bordered bg-white" id="tablica">
+    <thead id="thead"></thead>
+    <tbody id="tbody"></tbody>
+</table>
+
+
+<script>
+    'use strict'
+
+    function sortiraj() {
+        var izbor = document.getElementById("opcija").value;
+        if (filmoteka == undefined) {
+            alert("Nema podataka za sortiranje");
+            return;
+        }
+
+        if (izbor == "1") { //godina uzlazno
+            filmoteka.sort((a, b) => a.godina - b.godina);
+            appendToTable(filmoteka);
+        }
+        else if (izbor == "2") { //godina silazno
+            filmoteka.sort((a, b) => b.godina - a.godina);
+            appendToTable(filmoteka);
+        }
+        else if (izbor == "3") { //cijena uzlazno
+            filmoteka.sort((a, b) => a.cijena - b.cijena);
+            appendToTable(filmoteka);
+        }
+        else if (izbor == "4") { //cijena silazno
+            filmoteka.sort((a, b) => b.cijena - a.cijena);
+            appendToTable(filmoteka);
+        }
+        else {
+            alert("greska");
+        }
+    }
+
+    function filtriraj() {
+        var input = document.getElementById("filter").value.toUpperCase();
+        var table = document.getElementById("tablica");
+        var tr = table.getElementsByTagName("tr");
+
+        for (var i = 0; i < tr.length; i++) {
+            var td = tr[i].getElementsByTagName("td")[1];  //naslov filma
+            if (td) {
+                var txtValue = td.textContent || td.innerText;
+                if (txtValue.toUpperCase().indexOf(input) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+
+    function appendTableHead(single) {
+        let thead = document.getElementById("thead");
+        let tbody = document.getElementById("tbody");
+
+        thead.innerHTML = "";
+        tbody.innerHTML = "";
+
+        let header = domHelper.createTableHeader(single);
+        thead.appendChild(header);
+    }
+
+    function appendToTable(data) {
+
+        filmoteka = data;
+        var d = { 'ID': 0, 'NASLOV': 0, 'GODINA': 0, 'CIJENA':0, 'ŽANR':0, 'REDATELJ':0, '':0};
+        appendTableHead(d);
+        let tbody = document.getElementById('tbody');
+
+        for (var i = 0; i < data.length; i++) {
+            let row = document.createElement("tr");
+            var redatelj = data[i].redatelj.ime + " - " + data[i].redatelj.prezime;
+            let podaci = [data[i].id, data[i].naziv, data[i].godina, data[i].cijena, data[i].zanr.naziv, redatelj]
+            for (var j = 0; j < podaci.length + 1; j++) {
+                let td = document.createElement("td");
+                td.setAttribute("class", "align-middle");
+                if (j == podaci.length) {
+                    let button = document.createElement("button");
+                    button.id = podaci[0];
+                    button.setAttribute("class", "btn btn-link");
+                    button.onclick = function () { Delete(podaci[0]); };
+                    let span = document.createElement("span");
+                    span.setAttribute("class", "material-icons");
+                    let t = document.createTextNode("Izbriši");
+                    span.appendChild(t);
+                    td.appendChild(button);
+                    button.appendChild(span);
+
+
+                    let button2 = document.createElement("button");
+                    button2.id = podaci[0];
+                    button2.setAttribute("class", "btn btn-link");
+                    button2.onclick = function () { Update(podaci); };
+                    td.appendChild(button2);
+                    let span1 = document.createElement("span");
+                    span1.setAttribute("class", "material-icons");
+                    let t1 = document.createTextNode("Ažuriraj");
+                    span1.appendChild(t1);
+                    button2.appendChild(span1);
+
+
+                    let button3 = document.createElement("button");
+                    button3.id = podaci[0];
+                    button3.setAttribute("class", "btn btn-link");
+                    button3.onclick = function () { Favorites(podaci); };  // ili podaci[0] za ID
+                    td.appendChild(button3);
+                    let span2 = document.createElement("span");
+                    span2.setAttribute("class", "material-icons");
+                    let t2 = document.createTextNode("Favoriti");
+                    span2.appendChild(t2);
+                    button3.appendChild(span2);
+
+
+                }
+                else {
+                    let text = document.createTextNode(podaci[j]);
+                    td.appendChild(text);
+                }
+                row.appendChild(td);
+            }
+            tbody.appendChild(row);
+        }
+    }
+
+    function Delete(id) {
+        var authorization = "@User.Identity.Name.ToString()";
+        if (authorization == "pzelic") {
+            if (confirm("Sigurno želite izbrisati film sa ID-om " + id)) {
+                axios.delete(`/api/film/delete/${id}`,id).then(response => appendToTable(response.data));
+                alert("Podatak je izbrisan");
+            }
+            else {
+                return;
+            }
+        }
+    }
+
+    function Update(podaci) {
+        var authorization = "@User.Identity.Name.ToString()";
+        if (authorization == "pzelic") {
+            sessionStorage.setItem("id", podaci[0]);
+            sessionStorage.setItem("naziv", podaci[1]);
+            sessionStorage.setItem("godina", podaci[2]);
+            sessionStorage.setItem("slika", podaci[6]);
+            sessionStorage.setItem("cijena", podaci[3]);
+
+            window.location.href = '/Film/IzmjeniFilm';
+        }
+    }
+
+    function Favorites(podaci) {
+        alert("Napraviti trebam");
+    }
+
+    var filmoteka;
+    axios.get('/api/film').then(response => appendToTable(response.data));
+
+
+
+</script>
+
+<style>
+
+    body {
+        background-image: url("https://cdn.pixabay.com/photo/2016/03/23/17/33/curtain-1275200__340.png");
+        height: 100%; /* Center and scale the image nicely */
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+
+    .bg-white {
+        background-color: #ffffff !important;
+    }
+
+</style>
